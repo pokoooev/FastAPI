@@ -3,12 +3,16 @@ from unicodedata import category
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 
+
 from app.db import crud
+
 from app.db.db import get_db
-from app.schemas import BookCreate, BookResponse, BookUpdate
+
 from sqlalchemy.orm import Session
 from typing import Optional  
 from fastapi import Query
+
+from app.schemas import BookCreate, BookResponse, BookUpdate
 
 router = APIRouter(
     prefix="/books",
@@ -51,6 +55,13 @@ def create_book(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Book with this title already exists"
         )
+    if book.category_id is not None:
+        book_category = crud.get_category(db, category_id=book.category_id)
+        if book_category is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Category with {book.category_id} doesn't exist"
+            )
     return crud.create_book(db, title=book.title, description=book.description, price=book.price, url=book.url, category_id=book.category_id)
 
 
